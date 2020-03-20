@@ -31,14 +31,13 @@ int getCommandNumberFromUser()
 	return std::atoi(input.c_str());
 }
 
-int main(void)
+/*
+the function will print the opening message
+input: none
+output: none
+*/
+void printOpeningMsg()
 {
-	// initialization data access
-	MemoryAccess dataAccess;
-
-	// initialize album manager
-	AlbumManager albumManager(dataAccess);
-
 	//the time now
 	std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
@@ -48,6 +47,17 @@ int main(void)
 	std::cout << "The Time is: " << std::ctime(&time);
 	std::cout << "==========================================" << std::endl;
 	std::cout << "Type " << HELP << " to a list of all supported commands" << std::endl;
+}
+
+int main(void)
+{
+	// initialization data access
+	MemoryAccess dataAccess;
+
+	// initialize album manager
+	AlbumManager albumManager(dataAccess);
+
+	printOpeningMsg();
 	
 	do {
 		int commandNumber = getCommandNumberFromUser();
