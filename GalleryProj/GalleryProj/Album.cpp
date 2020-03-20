@@ -143,7 +143,7 @@ bool Album::operator==(const Album& other) const
 
 std::ostream& operator<<(std::ostream& strOut, const Album& album)
 {
-	strOut << "[" << album.m_name << "] - created by user@"
+	strOut << "[" << album.m_name << "] - Created by user@"
 		<< const_cast<Album&>(album).getOwnerId() << " in " << album.getCreationDate() << std::endl;
 	
 	return strOut;
