@@ -1,5 +1,8 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <ctime>
 #include "MemoryAccess.h"
 #include "AlbumManager.h"
 
@@ -28,6 +31,24 @@ int getCommandNumberFromUser()
 	return std::atoi(input.c_str());
 }
 
+/*
+the function will print the opening message
+input: none
+output: none
+*/
+void printOpeningMsg()
+{
+	//the time now
+	std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::string albumName;
+	std::cout << "Welcome to Gallery created by Omri Zaiman!" << std::endl;
+	std::cout << "==========================================" << std::endl;
+	std::cout << "The Time is: " << std::ctime(&time);
+	std::cout << "==========================================" << std::endl;
+	std::cout << "Type " << HELP << " to a list of all supported commands" << std::endl;
+}
+
 int main(void)
 {
 	// initialization data access
@@ -36,11 +57,7 @@ int main(void)
 	// initialize album manager
 	AlbumManager albumManager(dataAccess);
 
-
-	std::string albumName;
-	std::cout << "Welcome to Gallery!" << std::endl;
-	std::cout << "===================" << std::endl;
-	std::cout << "Type " << HELP << " to a list of all supported commands" << std::endl;
+	printOpeningMsg();
 	
 	do {
 		int commandNumber = getCommandNumberFromUser();

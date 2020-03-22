@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 ﻿  AlbumManager.cpp
   Gallery.cpp
   MemoryAccess.cpp
   Generating Code...
+=======
+﻿  Gallery.cpp
+>>>>>>> Feature/details_on_start
   GalleryProj.vcxproj -> C:\Users\omri\Documents\Official Magshimim\Magshimim 11th grade\SemesterB advancedProg\gallery\GalleryProj\Debug\GalleryProj.exe
