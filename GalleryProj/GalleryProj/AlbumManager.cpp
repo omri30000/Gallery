@@ -115,6 +115,21 @@ void AlbumManager::deleteAlbum()
 	std::cout << "Album [" << albumName << "] @"<< userId <<" deleted successfully." << std::endl;
 }
 
+/*
+the function will delete all the albums of a user via userId
+input: user id
+output: none
+*/
+void AlbumManager::deleteAllAlbumsOfUser(int userId)
+{
+	const User& user = m_dataAccess.getUser(userId);
+	const std::list<Album>& albums = m_dataAccess.getAlbumsOfUser(user);
+
+	for (const auto& album : albums) {
+		m_dataAccess.deleteAlbum(album.getName(), userId);
+	}
+}
+
 void AlbumManager::listAlbums()
 {
 	m_dataAccess.printAlbums();
@@ -138,7 +153,6 @@ void AlbumManager::listAlbumsOfUser()
 		std::cout <<"   + [" << album.getName() <<"] - created on "<< album.getCreationDate() << std::endl;
 	}
 }
-
 
 // ******************* Picture ******************* 
 void AlbumManager::addPictureToAlbum()
@@ -306,15 +320,12 @@ void AlbumManager::removeUser()
 	}
 	const User& user = m_dataAccess.getUser(userId);
 
-	//Debugging:
-	std::cout << std::endl << isCurrentAlbumSet() << std::endl;
-	std::cout << "\nuserId: " << userId << std::endl; 
-	std::cout << "\nafter: " << m_openAlbum.getOwnerId() << std::endl;
-	
+	//this closes the current open album
 	if (isCurrentAlbumSet() && userId == m_openAlbum.getOwnerId()) {
-		std::cout << "closed album\n";
 		closeAlbum();
 	}
+
+	deleteAllAlbumsOfUser(userId);
 
 	m_dataAccess.deleteUser(user);
 	std::cout << "User @" << userId << " deleted successfully." << std::endl;

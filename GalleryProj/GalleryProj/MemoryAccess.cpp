@@ -69,6 +69,15 @@ Album MemoryAccess::createDummyAlbum(const User& user)
 	return album;
 }
 
+/*
+the function will clean the user's data (albums etc...)
+input: a user object
+output: none
+*/
+void MemoryAccess::cleanUserData(const User& userId)
+{
+}
+
 const std::list<Album> MemoryAccess::getAlbums() 
 {
 	return m_albums;
@@ -179,10 +188,14 @@ void MemoryAccess::createUser(User& user)
 	m_users.push_back(user);
 }
 
+/*
+the function removes a user from the users list in 
+input: a user object
+output: none
+*/
 void MemoryAccess::deleteUser(const User& user)
 {
 	if (doesUserExists(user.getId())) {
-	
 		for (auto iter = m_users.begin(); iter != m_users.end(); ++iter) {
 			if (*iter == user) {
 				iter = m_users.erase(iter);
@@ -192,6 +205,12 @@ void MemoryAccess::deleteUser(const User& user)
 	}
 }
 
+
+/*
+the function will check if the user is known in the system
+input: user id
+output: true or false if the user exists
+*/
 bool MemoryAccess::doesUserExists(int userId) 
 {
 	auto iter = m_users.begin();
