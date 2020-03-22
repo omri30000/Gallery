@@ -305,7 +305,14 @@ void AlbumManager::removeUser()
 		throw MyException("Error: There is no user with id @" + userIdStr + "\n");
 	}
 	const User& user = m_dataAccess.getUser(userId);
+
+	//Debugging:
+	std::cout << std::endl << isCurrentAlbumSet() << std::endl;
+	std::cout << "\nuserId: " << userId << std::endl; 
+	std::cout << "\nafter: " << m_openAlbum.getOwnerId() << std::endl;
+	
 	if (isCurrentAlbumSet() && userId == m_openAlbum.getOwnerId()) {
+		std::cout << "closed album\n";
 		closeAlbum();
 	}
 
@@ -331,7 +338,8 @@ void AlbumManager::userStatistics()
 	std::cout << "user @" << userId << " Statistics:" << std::endl << "--------------------" << std::endl <<
 		"  + Count of Albums Tagged: " << m_dataAccess.countAlbumsTaggedOfUser(user) << std::endl <<
 		"  + Count of Tags: " << m_dataAccess.countTagsOfUser(user) << std::endl <<
-		"  + Avarage Tags per Alboum: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl;
+		"  + Avarage Tags per Alboum: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl <<
+		"  + Count of albums owned by user: " << m_dataAccess.countAlbumsOwnedOfUser(user);
 }
 
 
