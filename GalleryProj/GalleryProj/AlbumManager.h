@@ -28,6 +28,7 @@ private:
 	void openAlbum();
 	void closeAlbum();
 	void deleteAlbum();
+	void deleteAllAlbumsOfUser(int userId);
 	void listAlbums();
 	void listAlbumsOfUser();
 
