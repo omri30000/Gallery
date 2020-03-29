@@ -1,12 +1,17 @@
 #pragma once
-
+#include "sqlite3.h"
 #include "IDataAccess.h"
+#include <io.h>
 
 
 class DataBaseAccess : public IDataAccess
 {
+private:
+	const std::string dataBaseName = "MyDB.sqlite";
+	sqlite3* _db;
+
 public:
-	DataBaseAccess() = default;
+	DataBaseAccess();
 	virtual ~DataBaseAccess() = default;
 
 	// album related
@@ -44,16 +49,13 @@ public:
 	std::list<Picture> getTaggedPicturesOfUser(const User & user) override;
 
 	bool open() override;
-	void close() override {};
+	void close() override;
 	void clear() override;
+
+	//temp functions
+	bool executeCommand(const char* statement);
+
 private:
-	//maybe delete private
+	std::list<Album> m_albums;
+	std::list<User> m_users;
 };
-
-DataBaseAccess::DataBaseAccess()
-{
-}
-
-DataBaseAccess::~DataBaseAccess()
-{
-}
