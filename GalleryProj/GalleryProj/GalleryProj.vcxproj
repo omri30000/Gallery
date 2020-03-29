@@ -125,9 +125,11 @@
   <ItemGroup>
     <ClCompile Include="Album.cpp" />
     <ClCompile Include="AlbumManager.cpp" />
+    <ClCompile Include="DataBaseAccess.cpp" />
     <ClCompile Include="Gallery.cpp" />
     <ClCompile Include="MemoryAccess.cpp" />
     <ClCompile Include="Picture.cpp" />
+    <ClCompile Include="sqlite3.c" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -135,11 +137,13 @@
     <ClInclude Include="AlbumManager.h" />
     <ClInclude Include="AlbumNotOpenException.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="DataBaseAccess.h" />
     <ClInclude Include="IDataAccess.h" />
     <ClInclude Include="ItemNotFoundException.h" />
     <ClInclude Include="MemoryAccess.h" />
     <ClInclude Include="MyException.h" />
     <ClInclude Include="Picture.h" />
+    <ClInclude Include="sqlite3.h" />
     <ClInclude Include="User.h" />
   </ItemGroup>
   <ItemGroup>
