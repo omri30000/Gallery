@@ -425,6 +425,11 @@ void AlbumManager::refreshOpenAlbum() {
     m_openAlbum = m_dataAccess.openAlbum(m_currentAlbumName);
 }
 
+/*
+The function checks if there's an album which currently open
+input: none
+output: if an album is currently open
+*/
 bool AlbumManager::isCurrentAlbumSet() const
 {
     return !m_currentAlbumName.empty();

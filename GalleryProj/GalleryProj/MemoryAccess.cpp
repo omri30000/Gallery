@@ -18,6 +18,11 @@ void MemoryAccess::printAlbums()
 	}
 }
 
+/*
+this function will create dummy users for nothing.
+input: none
+output: always true this is useless
+*/
 bool MemoryAccess::open()
 {
 	// create some dummy albums

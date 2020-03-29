@@ -25,7 +25,7 @@ public:
 	virtual void untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId) = 0;
 
 	// user related
-	virtual void printUsers() =0;
+	virtual void printUsers() = 0;
 	virtual User getUser(int userId) = 0;
 	virtual void createUser(User& user ) = 0;
 	virtual void deleteUser(const User& user) = 0;

@@ -50,12 +50,9 @@ public:
 
 	bool open() override;
 	void close() override;
-	void clear() override;
+	void clear() override {}; // this function doesn't have to clear anything 
 
 	//temp functions
 	bool executeCommand(const char* statement);
-
-private:
-	std::list<Album> m_albums;
-	std::list<User> m_users;
+	bool createTables();
 };
