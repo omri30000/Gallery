@@ -110,6 +110,17 @@ int DataBaseAccess::callbackDataToTagList(void* data, int argc, char** argv, cha
 }
 
 /*
+The function will check if a sql statement returns 1 value or more
+input: the list to set, number of fields, strings with the data, strings with fields names
+output: 0 if succeeded
+*/
+int DataBaseAccess::callbackCheckExistence(void* data, int argc, char** argv, char** azColName)
+{
+	//if this function was called it means that there are 1 or more records
+	*(bool*)data = true;
+}
+
+/*
 the function is the constructor of dataBaseAccess object
 input: none
 output: none
@@ -429,6 +440,44 @@ void DataBaseAccess::deleteAlbum(const std::string& albumName, int userId)
 }
 
 /*
+The function will check if an album appears in the database by it's name
+input: album name, user id
+output: true or false if the album exists or not
+*/
+bool DataBaseAccess::doesAlbumExists(const std::string& albumName, int userId)
+{
+	int rValue = false;
+
+	std::string sqlStatement = "SELECT * FROM Albums "
+		"WHERE USER_ID = " + std::to_string(userId) + " AND NAME = " + albumName + ";";
+
+	executeCommand(sqlStatement.c_str(), callbackCheckExistence, &rValue);
+
+	return rValue;
+}
+
+/*
+The function will load an album from database and open it
+!for now, the function will open the first album that appears in the DB because we don't know which user is connected
+input: album name
+output: album object
+*/
+Album DataBaseAccess::openAlbum(const std::string& albumName)
+{
+	this->m_albums.clear();
+	auto a = getAlbums();
+	
+	for (std::list<Album>::iterator it = this->m_albums.begin(); it != this->m_albums.end(); it++)
+	{
+		if(it->getName()._Equal(albumName))
+		{
+			return *it;
+		}
+	}
+	throw MyException("Invalid Album Name");
+}
+
+/*
 the function will get an album to close and remove it from storage
 input: an album to close
 output: none
@@ -436,6 +485,26 @@ output: none
 void DataBaseAccess::closeAlbum(Album& pAlbum)
 {
 	//this function do nothing for real
+}
+
+/*
+The function will print all the albums exists
+input: none
+output: none
+*/
+void DataBaseAccess::printAlbums()
+{
+	this->m_albums.clear();
+	auto a = getAlbums();
+
+	if (m_albums.empty()) {
+		throw MyException("There are no existing albums.");
+	}
+	std::cout << "Album list:" << std::endl;
+	std::cout << "-----------" << std::endl;
+	for (const Album& album : m_albums) {
+		std::cout << std::setw(5) << "* " << album;
+	}
 }
 
 /*

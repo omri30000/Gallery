@@ -22,6 +22,7 @@ private:
 	static int callbackDataToAlbumList(void* data, int argc, char** argv, char** azColName);
 	static int callbackDataToPictureList(void* data, int argc, char** argv, char** azColName);
 	static int callbackDataToTagList(void* data, int argc, char** argv, char** azColName);
+	static int callbackCheckExistence(void* data, int argc, char** argv, char** azColName);
 
 public:
 	DataBaseAccess();
