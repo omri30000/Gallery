@@ -75,7 +75,7 @@ int DataBaseAccess::callbackDataToPictureList(void* data, int argc, char** argv,
 			albumID = atoi(argv[i]);
 		}
 	}
-	
+	//std::queue<std::pair<Picture, std::pair<int,int>>>
 	((std::list<std::pair<Picture, int>>*)data)->push_back(std::make_pair(Picture(m_pictureId, m_name, m_pathOnDisk, m_creationDate), albumID));
 
 	return 0;
@@ -88,7 +88,23 @@ output: 0 if succeeded
 */
 int DataBaseAccess::callbackDataToTagList(void* data, int argc, char** argv, char** azColName)
 {
+	int pictureID = 0;
+	int userID = 0;
 
+	//get all details except for tags.
+	for (int i = 0; i < argc; i++)
+	{
+		if (std::string(azColName[i])._Equal("PICTURE_ID"))
+		{
+			pictureID = atoi(argv[i]);
+		}
+		if (std::string(azColName[i])._Equal("USER_ID"))
+		{
+			userID = atoi(argv[i]);
+		}
+	}
+
+	((std::list<std::pair<int, int>>*)data)->push_back(std::make_pair(pictureID, userID));
 
 	return 0;
 }
@@ -140,6 +156,17 @@ void DataBaseAccess::close()
 {
 	sqlite3_close(this->_db);
 	this->_db = nullptr;
+}
+
+/*
+The function will clear all the memory that is saved in the class
+input: none
+output: none
+*/
+void DataBaseAccess::clear()
+{
+	this->m_albums.clear();
+	this->m_users.clear();
 }
 
 /*
@@ -259,6 +286,7 @@ const std::list<Album> DataBaseAccess::getAlbums()
 {
 	std::list<std::pair<Album, int>> tempAlbums;
 	std::queue<std::pair<Picture, int>> tempPictures;
+	std::list<std::pair<int, int>> tempTags; //<pictureID, USER_ID>
 	std::string sqlStatement = "SELECT * FROM Albums;";
 	
 	this->m_albums.clear();// clear previous data
@@ -269,12 +297,25 @@ const std::list<Album> DataBaseAccess::getAlbums()
 	sqlStatement = "SELECT * FROM Pictures;";
 	executeCommand(sqlStatement.c_str(), callbackDataToPictureList, &tempPictures);
 
+	sqlStatement = "SELECT * FROM Tags;";
+	executeCommand(sqlStatement.c_str(), callbackDataToTagList, &tempTags);
+
 
 	// relate pictures to albums
 	while (!tempPictures.empty())
 	{
-		int pictureAlbumID = tempPictures.front().second;
+		int pictureAlbumID = tempPictures.front().second; // the albumID in the picture object
+		
+														  //realte pictures and tags
+		for (std::list<std::pair<int, int>>::iterator ite = tempTags.begin(); ite != tempTags.end(); ite++)
+		{
+			if (ite->first == tempPictures.front().first.getId()) // the picture id is the picture id in the tag
+			{
+				tempPictures.front().first.tagUser(ite->second);
+			}
+		}
 
+		//run on the albums
 		for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
 		{
 			if (pictureAlbumID == it->second) // the picture belongs to this album
@@ -285,8 +326,6 @@ const std::list<Album> DataBaseAccess::getAlbums()
 
 		tempPictures.pop();
 	}
-
-
 
 	//cast std::list<std::pair<Album, int>> to std::list<Album>
 	{
