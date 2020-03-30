@@ -2,14 +2,26 @@
 #include "sqlite3.h"
 #include "IDataAccess.h"
 #include "ItemNotFoundException.h"
+#include <queue>
 #include <io.h>
 
 
 class DataBaseAccess : public IDataAccess
 {
 private:
+	std::list<Album> m_albums;
+	std::list<User> m_users;
 	const std::string dataBaseName = "MyDB.sqlite";
 	sqlite3* _db;
+
+	//temp functions
+	bool executeCommand(const char* statement);
+	bool executeCommand(const char* statement, int (*callback)(void*, int, char**, char**), void* arg);
+	bool createTables();
+
+	static int callbackDataToAlbumList(void* data, int argc, char** argv, char** azColName);
+	static int callbackDataToPictureList(void* data, int argc, char** argv, char** azColName);
+	static int callbackDataToTagList(void* data, int argc, char** argv, char** azColName);
 
 public:
 	DataBaseAccess();
@@ -51,9 +63,5 @@ public:
 
 	bool open() override;
 	void close() override;
-	void clear() override {}; // this function doesn't have to clear anything 
-
-	//temp functions
-	bool executeCommand(const char* statement);
-	bool createTables();
+	void clear() override; // TODO: clear class data
 };

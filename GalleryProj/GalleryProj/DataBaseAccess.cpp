@@ -1,12 +1,107 @@
 #include "DataBaseAccess.h"
 
 /*
+The function is a callback function that will cast the sql results to an album list
+input: the list to set, number of fields, strings with the data, strings with fields names
+output: 0 if succeeded
+*/
+int DataBaseAccess::callbackDataToAlbumList(void* data, int argc, char** argv, char** azColName)
+{
+	int m_ownerId{ 0 };
+	int albumID{ 0 };
+	std::string m_name;
+	std::string m_creationDate;
+	
+	//get all details except for pictures.
+	for (int i = 0; i < argc; i++)
+	{
+		if (std::string(azColName[i])._Equal("USER_ID"))
+		{
+			m_ownerId = atoi(argv[i]);
+		}
+		else if (std::string(azColName[i])._Equal("NAME"))
+		{
+			m_name = argv[i];
+		}
+		else if (std::string(azColName[i])._Equal("CREATION_DATE"))
+		{
+			m_creationDate = argv[i];
+		}
+		else if (std::string(azColName[i])._Equal("ID"))
+		{
+			albumID = atoi(argv[i]);
+		}
+	}
+
+	((std::list<std::pair<Album, int>>*)data)->push_back(std::make_pair(Album(m_ownerId, m_name, m_creationDate), albumID));
+	
+	return 0;
+}
+
+/*
+The function is a callback function that will cast the sql results to a pictures list
+input: the list to set, number of fields, strings with the data, strings with fields names
+output: 0 if succeeded
+*/
+int DataBaseAccess::callbackDataToPictureList(void* data, int argc, char** argv, char** azColName)
+{
+	int m_pictureId = 0;
+	std::string m_name;
+	std::string m_pathOnDisk;
+	std::string m_creationDate;
+	int albumID = -1;
+
+	//get all details except for tags.
+	for (int i = 0; i < argc; i++)
+	{
+		if (std::string(azColName[i])._Equal("ID"))
+		{
+			m_pictureId = atoi(argv[i]);
+		}
+		if (std::string(azColName[i])._Equal("NAME"))
+		{
+			m_name = argv[i];
+		}
+		if (std::string(azColName[i])._Equal("LOCATION"))
+		{
+			m_pathOnDisk = argv[i];
+		}
+		if (std::string(azColName[i])._Equal("CREATION_DATE"))
+		{
+			m_creationDate = argv[i];
+		}
+		if (std::string(azColName[i])._Equal("ALBUM_ID"))
+		{
+			albumID = atoi(argv[i]);
+		}
+	}
+	
+	((std::list<std::pair<Picture, int>>*)data)->push_back(std::make_pair(Picture(m_pictureId, m_name, m_pathOnDisk, m_creationDate), albumID));
+
+	return 0;
+}
+
+/*
+The function is a callback function that will cast the sql results to a tags list
+input: the list to set, number of fields, strings with the data, strings with fields names
+output: 0 if succeeded
+*/
+int DataBaseAccess::callbackDataToTagList(void* data, int argc, char** argv, char** azColName)
+{
+
+
+	return 0;
+}
+
+/*
 the function is the constructor of dataBaseAccess object
 input: none
 output: none
 */
 DataBaseAccess::DataBaseAccess()
 {
+	this->m_albums.clear();
+	this->m_users.clear();
 	this->_db = nullptr;
 }
 
@@ -58,6 +153,29 @@ bool DataBaseAccess::executeCommand(const char* statement)
 
 	char** errMessage = nullptr;
 	res = sqlite3_exec(this->_db, statement, nullptr, nullptr, errMessage);
+
+	if (res != SQLITE_OK)
+	{
+		//std::cout << "Error in creating Users table" << std::endl;
+		//system("pause");
+		return false;
+	}
+
+	return true;
+}
+
+
+/*
+The function will get sql statement and execute it on the db of the class
+input: sql statement
+output: true or false if everything went fine
+*/
+bool DataBaseAccess::executeCommand(const char* statement, int (*callback)(void*, int, char**, char**), void* arg)
+{
+	int res = 0;
+
+	char** errMessage = nullptr;
+	res = sqlite3_exec(this->_db, statement, callback, arg, errMessage);
 
 	if (res != SQLITE_OK)
 	{
@@ -130,6 +248,55 @@ bool DataBaseAccess::createTables()
 	}
 
 	return true;
+}
+
+/*
+The function will set the list of albums of the class with data from the database and return it
+input: none
+output: all albums list
+*/
+const std::list<Album> DataBaseAccess::getAlbums()
+{
+	std::list<std::pair<Album, int>> tempAlbums;
+	std::queue<std::pair<Picture, int>> tempPictures;
+	std::string sqlStatement = "SELECT * FROM Albums;";
+	
+	this->m_albums.clear();// clear previous data
+
+	executeCommand(sqlStatement.c_str(), callbackDataToAlbumList, &tempAlbums);
+	// here tempAlbums should contain the details of the album without the pictures
+
+	sqlStatement = "SELECT * FROM Pictures;";
+	executeCommand(sqlStatement.c_str(), callbackDataToPictureList, &tempPictures);
+
+
+	// relate pictures to albums
+	while (!tempPictures.empty())
+	{
+		int pictureAlbumID = tempPictures.front().second;
+
+		for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
+		{
+			if (pictureAlbumID == it->second) // the picture belongs to this album
+			{ 
+				it->first.addPicture(tempPictures.front().first);//add picture to album			
+			}
+		}
+
+		tempPictures.pop();
+	}
+
+
+
+	//cast std::list<std::pair<Album, int>> to std::list<Album>
+	{
+		for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
+		{
+			this->m_albums.push_back(it->first);
+		}
+	}
+
+	return this->m_albums;
 }
 
 /*
