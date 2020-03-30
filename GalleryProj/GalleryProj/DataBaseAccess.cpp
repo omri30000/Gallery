@@ -78,7 +78,7 @@ bool DataBaseAccess::createTables()
 {
 	{//Create Users table
 		const char* sqlStatement = "CREATE TABLE Users("
-			"ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+			"ID INTEGER PRIMARY KEY NOT NULL, "
 			"NAME TEXT NOT NULL);";
 
 		if (!executeCommand(sqlStatement))
@@ -120,7 +120,7 @@ bool DataBaseAccess::createTables()
 			"PICTURE_ID INTEGER, "
 			"USER_ID INTEGER, "
 			"FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID) ON DELETE CASCADE"
-			"FOREIGN KEY(USER_ID) REFERENCES Users(ID)"
+			"FOREIGN KEY(USER_ID) REFERENCES Users(ID) ON DELETE CASCADE"
 			");";
 
 		if (!executeCommand(sqlStatement))
@@ -191,5 +191,73 @@ void DataBaseAccess::removePictureFromAlbumByName(const std::string& albumName, 
 	{
 		throw ItemNotFoundException(pictureName, -1);
 	}
-	
+}
+
+/*
+The function will add a tag to the tags table
+input: picture name and user id
+output: none
+*/
+void DataBaseAccess::tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
+{
+	//insert tag to tags and relate it to Pictures and Users
+	std::string sqlStatement = "INSERT INTO Tags (PICTURE_ID, USER_ID) "
+		"VALUES (SELECT ID FROM Pictures WHERE NAME = "+ pictureName +", "+ std::to_string(userId) +");";
+	//TODO: fix statement so it will work when there are more than 1 pictures with the same name
+	executeCommand(sqlStatement.c_str());
+	//TODO: if executeCommand fails, throw "PictureAddingException"
+}
+
+/*
+the function will remove a tag record from tags table in database
+input: an album name, picture name, and user ID
+output: none
+*/
+void DataBaseAccess::untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
+{
+	//delete picture
+	std::string sqlStatement = "DELETE FROM Tags "
+		"WHERE PICTURE_ID = SELECT ID FROM Pictures WHERE NAME = " + pictureName + " AND USER_ID = " + std::to_string(userId) + ";";
+
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw ItemNotFoundException(pictureName, -1);
+	}
+}
+
+/*
+The function inserts user to Users table in database
+input: user object
+output: none
+*/
+void DataBaseAccess::createUser(User& user)
+{
+	//insert user to Users
+	std::string sqlStatement = "INSERT INTO Users (ID, NAME) "
+		"VALUES (" + std::to_string(user.getId()) + ", " + user.getName() + ");";
+
+	executeCommand(sqlStatement.c_str());
+	//TODO: if executeCommand fails, throw "UserAddingException"
+}
+
+/*
+The function will delete user record from Users table in database
+input: user object
+output: none
+*/
+void DataBaseAccess::deleteUser(const User& user)
+{
+	//delete picture
+	std::string sqlStatement = "DELETE FROM Users "
+		"WHERE ID = " + std::to_string(user.getId()) + ";";
+
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw ItemNotFoundException(user.getName(), user.getId());
+	}
+}
+
+float DataBaseAccess::averageTagsPerAlbumOfUser(const User& user)
+{
+	return 0.0f;
 }
