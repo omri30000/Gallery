@@ -106,7 +106,7 @@ bool DataBaseAccess::createTables()
 			"LOCATION TEXT NOT NULL, "
 			"CREATION_DATE TEXT NOT NULL, "
 			"ALBUM_ID INTEGER, "
-			"FOREIGN KEY(ALBUM_ID) REFERENCES Albums(ID)"
+			"FOREIGN KEY(ALBUM_ID) REFERENCES Albums(ID) ON DELETE CASCADE"
 			");";
 
 		if (!executeCommand(sqlStatement))
@@ -119,7 +119,7 @@ bool DataBaseAccess::createTables()
 			"ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
 			"PICTURE_ID INTEGER, "
 			"USER_ID INTEGER, "
-			"FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID)"
+			"FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID) ON DELETE CASCADE"
 			"FOREIGN KEY(USER_ID) REFERENCES Users(ID)"
 			");";
 
@@ -133,6 +133,23 @@ bool DataBaseAccess::createTables()
 }
 
 /*
+The function will delete an existing album from database
+input: album name and a user ID
+output: none
+*/
+void DataBaseAccess::deleteAlbum(const std::string& albumName, int userId)
+{
+	//TODO: check "ON DELETE CASCADE" works
+
+	//delete album
+	std::string sqlStatement = "DELETE FROM Albums "
+		"WHERE USER_ID = " +std::to_string(userId) + " AND NAME = " + albumName + ";";
+
+	executeCommand(sqlStatement.c_str());
+	//TODO: if executeCommand fails, throw "albumDeletionException"
+}
+
+/*
 the function will get an album to close and remove it from storage
 input: an album to close
 output: none
@@ -140,4 +157,39 @@ output: none
 void DataBaseAccess::closeAlbum(Album& pAlbum)
 {
 	//this function do nothing for real
+}
+
+/*
+The function will relate a picture to an album in the database
+input: album name and picture object
+output: none
+*/
+void DataBaseAccess::addPictureToAlbumByName(const std::string& albumName, const Picture& picture)
+{
+	//insert picture to pictures and relate it to albums
+	std::string sqlStatement = "INSERT INTO Pictures (ID, NAME, LOCATION, CREATION_DATE, ALBUM_ID) "
+		"VALUES (" + std::to_string(picture.getId()) + ", " + picture.getName() + ", " + picture.getPath() + ", "
+		"" + picture.getCreationDate() + ", SELECT ID FROM Albums WHERE NAME = " + albumName + ");";
+
+	executeCommand(sqlStatement.c_str());
+	//TODO: if executeCommand fails, throw "PictureAddingException"
+}
+
+
+/*
+The function will remove a picture record from database
+input: album name, picture name
+output: none
+*/
+void DataBaseAccess::removePictureFromAlbumByName(const std::string& albumName, const std::string& pictureName)
+{
+	//delete picture
+	std::string sqlStatement = "DELETE FROM Pictures "
+		"WHERE NAME = " + pictureName + " AND ALBUM_ID = SELECT ID FROM ALBUMS WHERE NAME = " + albumName + ";";
+
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw ItemNotFoundException(pictureName, -1);
+	}
+	
 }

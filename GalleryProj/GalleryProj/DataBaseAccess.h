@@ -1,6 +1,7 @@
 #pragma once
 #include "sqlite3.h"
 #include "IDataAccess.h"
+#include "ItemNotFoundException.h"
 #include <io.h>
 
 
