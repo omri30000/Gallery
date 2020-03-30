@@ -233,7 +233,7 @@ bool DataBaseAccess::createTables()
 	}
 	{//Create Albums table
 		const char* sqlStatement = "CREATE TABLE Albums("
-			"ID INTEGER PRIMARY KEY NOT NULL, "
+			"ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
 			"NAME TEXT NOT NULL, "
 			"CREATION_DATE TEXT NOT NULL, "
 			"USER_ID INTEGER, "
@@ -336,6 +336,79 @@ const std::list<Album> DataBaseAccess::getAlbums()
 	}
 
 	return this->m_albums;
+}
+
+/*
+The function will set the list of albums of the class with data from the database and return it
+input: none
+output: all albums list
+*/
+const std::list<Album> DataBaseAccess::getAlbumsOfUser(const User& user)
+{
+	std::list<std::pair<Album, int>> tempAlbums;
+	std::queue<std::pair<Picture, int>> tempPictures;
+	std::list<std::pair<int, int>> tempTags; //<pictureID, USER_ID>
+	std::string sqlStatement = "SELECT * FROM Albums WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+
+	this->m_albums.clear();// clear previous data
+
+	executeCommand(sqlStatement.c_str(), callbackDataToAlbumList, &tempAlbums);
+	// here tempAlbums should contain the details of the album without the pictures
+
+	sqlStatement = "SELECT * FROM Pictures WHERE ALBUM_ID = " + std::to_string(tempAlbums.begin()->second) + ";";
+	executeCommand(sqlStatement.c_str(), callbackDataToPictureList, &tempPictures);
+
+	sqlStatement = "SELECT * FROM Tags WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+	executeCommand(sqlStatement.c_str(), callbackDataToTagList, &tempTags);
+
+
+	// relate pictures to albums
+	while (!tempPictures.empty())
+	{
+		int pictureAlbumID = tempPictures.front().second; // the albumID in the picture object
+
+														  //realte pictures and tags
+		for (std::list<std::pair<int, int>>::iterator ite = tempTags.begin(); ite != tempTags.end(); ite++)
+		{
+			if (ite->first == tempPictures.front().first.getId()) // the picture id is the picture id in the tag
+			{
+				tempPictures.front().first.tagUser(ite->second);
+			}
+		}
+
+		//run on the albums
+		for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
+		{
+			if (pictureAlbumID == it->second) // the picture belongs to this album
+			{
+				it->first.addPicture(tempPictures.front().first);//add picture to album			
+			}
+		}
+
+		tempPictures.pop();
+	}
+
+	//cast std::list<std::pair<Album, int>> to std::list<Album>
+	for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
+	{
+		this->m_albums.push_back(it->first);
+	}
+
+	return this->m_albums;
+}
+
+/*
+The function will insert a new album to the database
+input: an album to insert
+output: none
+*/
+void DataBaseAccess::createAlbum(const Album& album)
+{
+	std::string sqlStatement = "INSERT INTO Albums (NAME, CREATION_DATE, USER_ID)"
+		"VALUES (" + album.getName() + ", " + album.getCreationDate() + ", " + std::to_string(album.getOwnerId()) + ");";
+
+	executeCommand(sqlStatement.c_str());
+	//TODO: throw exception if it doesn't work
 }
 
 /*
@@ -463,6 +536,11 @@ void DataBaseAccess::deleteUser(const User& user)
 	}
 }
 
+/*
+The function will calculate the average amount of tags a user has
+input: user object
+output: average tags of user
+*/
 float DataBaseAccess::averageTagsPerAlbumOfUser(const User& user)
 {
 	return 0.0f;
