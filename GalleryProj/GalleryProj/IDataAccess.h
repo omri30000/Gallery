@@ -31,7 +31,6 @@ public:
 	virtual void deleteUser(const User& user) = 0;
 	virtual bool doesUserExists(int userId) = 0 ;
 	
-	
 	// user statistics
 	virtual int countAlbumsOwnedOfUser(const User& user) = 0;
 	virtual int countAlbumsTaggedOfUser(const User& user) = 0;

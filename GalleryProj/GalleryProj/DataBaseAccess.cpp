@@ -60,15 +60,21 @@ int DataBaseAccess::callbackDataToPictureList(void* data, int argc, char** argv,
 		}
 		if (std::string(azColName[i])._Equal("NAME"))
 		{
-			m_name = argv[i];
+			m_name = "\"";
+			m_name += argv[i];
+			m_name += "\"";
 		}
 		if (std::string(azColName[i])._Equal("LOCATION"))
 		{
-			m_pathOnDisk = argv[i];
+			m_pathOnDisk = "\"";
+			m_pathOnDisk += argv[i];
+			m_pathOnDisk += "\"";
 		}
 		if (std::string(azColName[i])._Equal("CREATION_DATE"))
 		{
-			m_creationDate = argv[i];
+			m_creationDate = "\"";
+			m_creationDate += argv[i];
+			m_creationDate += "\"";
 		}
 		if (std::string(azColName[i])._Equal("ALBUM_ID"))
 		{
@@ -129,7 +135,7 @@ int DataBaseAccess::callbackGetData(void* data, int argc, char** argv, char** az
 {
 	for (int i = 0; i < argc; i++)
 	{
-		((list<pair<string, string>>*)data)->push_back(std::make_pair(azColName[i], argv[i]));
+		((list<pair<string, string>>*)data)->push_back(std::make_pair("\'" + string(azColName[i])+ "\'", "\'" + string(argv[i]) + "\'"));
 	}
 
 	return 0;
@@ -793,6 +799,9 @@ output: average tags of user
 */
 float DataBaseAccess::averageTagsPerAlbumOfUser(const User& user)
 {
+	float avg = 0;
+
+
 	//TODO: fill this function
 	return 0.0f;
 }
@@ -829,10 +838,14 @@ Picture DataBaseAccess::getTopTaggedPicture()
 {
 	list<pair<string, string>> data;
 	int topTaggedPictureId = 0;
-
-	std::string sqlStatement = "SELECT PICTURE_ID FROM TAGS"
-		"GROUP BY PICTURE_ID"
-		"ORDER BY COUNT(PICTURE_ID) DESC"
+	string topTaggedPictureName = "";
+	string topTaggedPictureCreationDate = "";
+	string topTaggedPictureLocation = "";
+	string sqlStatement = "SELECT * FROM PICTURES "
+		"INNER JOIN TAGS "
+		"ON TAGS.PICTURE_ID = PICTURES.ID "
+		"GROUP BY PICTURE_ID "
+		"ORDER BY COUNT(PICTURE_ID) DESC "
 		"LIMIT 1;";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
@@ -840,10 +853,71 @@ Picture DataBaseAccess::getTopTaggedPicture()
 		throw MyException("Failed to find top tagged picture");
 	}
 
-	//expected value of data: list<pair<"PICTURE_ID", value/top_taged_picture_id>>, the list supposed to have 1 value 
-	topTaggedPictureId = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
-	
-	//TODO: cast picture details to picture object and return it
-	return ;
+	//expected value of data: list<pair<column_name, value/top_taged_picture>>, the list supposed to have 1 record in it 
+	for (list<pair<string, string>>::iterator it = data.begin(); it != data.end(); it++)
+	{
+		if (it->first._Equal("ID"))
+			topTaggedPictureId = atoi(it->second.c_str()); // get the ID of the top tagged picture
+		else if (it->first._Equal("NAME"))
+			topTaggedPictureName = it->second;
+		else if (it->first._Equal("CREATION_DATE"))
+			topTaggedPictureCreationDate = it->second;
+		else if (it->first._Equal("LOCATION"))
+			topTaggedPictureLocation = it->second;
+	}
+
+	//TODO: relate tags to picture object before returning it
+
+	return Picture(topTaggedPictureId, topTaggedPictureName, topTaggedPictureLocation, topTaggedPictureCreationDate);
 }
 
+/*
+The function will find and return the pictures that a user is tagged in
+input: a user
+output: a list of pictures that the user is tagged in
+*/
+std::list<Picture> DataBaseAccess::getTaggedPicturesOfUser(const User& user)
+{
+	list<Picture> pictures; // the list to return
+	queue<int> pictureIds;
+	queue<string> pictureNames;
+	queue<string> pictureCreationDates;
+	queue<string> pictureLocations;
+	list<pair<string, string>> data;
+
+	string sqlStatement = "SELECT * FROM Pictures "
+		"INNER JOIN Tags "
+		"ON Pictures.ID = Tags.PICTURE_ID "
+		"WHERE Tags.USER_ID = 1;";
+
+	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
+	{
+		throw ItemNotFoundException(user.getName(), user.getId());
+	}
+
+	//expected value of data: list<pair<column_name, value/top_taged_picture>>
+	for (list<pair<string, string>>::iterator it = data.begin(); it != data.end(); it++)
+	{
+		if (it->first._Equal("ID"))
+			pictureIds.push(atoi(it->second.c_str())); // get the ID of the top tagged picture
+		else if (it->first._Equal("NAME"))
+			pictureNames.push(it->second);
+		else if (it->first._Equal("CREATION_DATE"))
+			pictureCreationDates.push(it->second);
+		else if (it->first._Equal("LOCATION"))
+			pictureLocations.push(it->second);
+	}
+
+	while (!pictureIds.empty())
+	{
+		pictures.push_back(Picture(pictureIds.front(), pictureNames.front(), pictureCreationDates.front(), pictureLocations.front()));
+
+		//remove one line
+		pictureIds.pop();
+		pictureNames.pop();
+		pictureCreationDates.pop();
+		pictureLocations.pop();
+	}
+
+	return pictures;
+}
