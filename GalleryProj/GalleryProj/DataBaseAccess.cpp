@@ -445,10 +445,12 @@ output: none
 void DataBaseAccess::createAlbum(const Album& album)
 {
 	std::string sqlStatement = "INSERT INTO Albums (NAME, CREATION_DATE, USER_ID)"
-		"VALUES (" + album.getName() + ", " + album.getCreationDate() + ", " + std::to_string(album.getOwnerId()) + ");";
+		"VALUES (\"" + album.getName() + "\", \"" + album.getCreationDate() + "\", " + std::to_string(album.getOwnerId()) + ");";
 
-	executeCommand(sqlStatement.c_str());
-	//TODO: throw exception if it doesn't work
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw MyException("Can't open album right now.");
+	}
 }
 
 /*
@@ -650,7 +652,7 @@ void DataBaseAccess::createUser(User& user)
 
 	if (!executeCommand(sqlStatement.c_str()))
 	{
-		throw ItemNotFoundException(user.getName(), user.getId());
+		throw MyException("Can't create user right now");
 	}
 }
 
