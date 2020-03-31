@@ -226,7 +226,7 @@ void AlbumManager::showPicture()
 	}
 
 	// Bad practice!!!
-	// Can lead to privileges escalation
+	// Can lead to privileges escalations
 	// You will replace it on WinApi Lab(bonus)
 	system(pic.getPath().c_str()); 
 }
