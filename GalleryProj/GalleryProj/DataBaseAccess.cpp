@@ -393,45 +393,47 @@ const std::list<Album> DataBaseAccess::getAlbumsOfUser(const User& user)
 	executeCommand(sqlStatement.c_str(), callbackDataToAlbumList, &tempAlbums);
 	// here tempAlbums should contain the details of the album without the pictures
 
-	sqlStatement = "SELECT * FROM Pictures WHERE ALBUM_ID = " + std::to_string(tempAlbums.begin()->second) + ";";
-	executeCommand(sqlStatement.c_str(), callbackDataToPictureList, &tempPictures);
-
-	sqlStatement = "SELECT * FROM Tags WHERE USER_ID = " + std::to_string(user.getId()) + ";";
-	executeCommand(sqlStatement.c_str(), callbackDataToTagList, &tempTags);
-
-
-	// relate pictures to albums
-	while (!tempPictures.empty())
+	if (tempAlbums.size() > 0)
 	{
-		int pictureAlbumID = tempPictures.front().second; // the albumID in the picture object
+		sqlStatement = "SELECT * FROM Pictures WHERE ALBUM_ID = " + std::to_string(tempAlbums.begin()->second) + ";";
+		executeCommand(sqlStatement.c_str(), callbackDataToPictureList, &tempPictures);
 
-														  //realte pictures and tags
-		for (std::list<std::pair<int, int>>::iterator ite = tempTags.begin(); ite != tempTags.end(); ite++)
+		sqlStatement = "SELECT * FROM Tags WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+		executeCommand(sqlStatement.c_str(), callbackDataToTagList, &tempTags);
+
+
+		// relate pictures to albums
+		while (!tempPictures.empty())
 		{
-			if (ite->first == tempPictures.front().first.getId()) // the picture id is the picture id in the tag
+			int pictureAlbumID = tempPictures.front().second; // the albumID in the picture object
+
+															  //realte pictures and tags
+			for (std::list<std::pair<int, int>>::iterator ite = tempTags.begin(); ite != tempTags.end(); ite++)
 			{
-				tempPictures.front().first.tagUser(ite->second);
+				if (ite->first == tempPictures.front().first.getId()) // the picture id is the picture id in the tag
+				{
+					tempPictures.front().first.tagUser(ite->second);
+				}
 			}
+
+			//run on the albums
+			for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
+			{
+				if (pictureAlbumID == it->second) // the picture belongs to this album
+				{
+					it->first.addPicture(tempPictures.front().first);//add picture to album			
+				}
+			}
+
+			tempPictures.pop();
 		}
 
-		//run on the albums
+		//cast std::list<std::pair<Album, int>> to std::list<Album>
 		for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
 		{
-			if (pictureAlbumID == it->second) // the picture belongs to this album
-			{
-				it->first.addPicture(tempPictures.front().first);//add picture to album			
-			}
+			this->m_albums.push_back(it->first);
 		}
-
-		tempPictures.pop();
 	}
-
-	//cast std::list<std::pair<Album, int>> to std::list<Album>
-	for (std::list<std::pair<Album, int>>::iterator it = tempAlbums.begin(); it != tempAlbums.end(); it++)
-	{
-		this->m_albums.push_back(it->first);
-	}
-
 	return this->m_albums;
 }
 
@@ -676,10 +678,10 @@ output: true or false if the album exists or not
 */
 bool DataBaseAccess::doesUserExists(int userId)
 {
-	int rValue = false;
+	bool rValue = false;
 
 	std::string sqlStatement = "SELECT * FROM Users "
-		"WHERE USER_ID = " + std::to_string(userId) + ";";
+		"WHERE ID = " + std::to_string(userId) + ";";
 
 	executeCommand(sqlStatement.c_str(), callbackCheckExistence, &rValue);
 
