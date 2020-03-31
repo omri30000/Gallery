@@ -58,32 +58,31 @@ int DataBaseAccess::callbackDataToPictureList(void* data, int argc, char** argv,
 		{
 			m_pictureId = atoi(argv[i]);
 		}
-		if (std::string(azColName[i])._Equal("NAME"))
+		else if (std::string(azColName[i])._Equal("NAME"))
 		{
 			m_name = "\"";
 			m_name += argv[i];
 			m_name += "\"";
 		}
-		if (std::string(azColName[i])._Equal("LOCATION"))
+		else if (std::string(azColName[i])._Equal("LOCATION"))
 		{
 			m_pathOnDisk = "\"";
 			m_pathOnDisk += argv[i];
 			m_pathOnDisk += "\"";
 		}
-		if (std::string(azColName[i])._Equal("CREATION_DATE"))
+		else if (std::string(azColName[i])._Equal("CREATION_DATE"))
 		{
 			m_creationDate = "\"";
 			m_creationDate += argv[i];
 			m_creationDate += "\"";
 		}
-		if (std::string(azColName[i])._Equal("ALBUM_ID"))
+		else if (std::string(azColName[i])._Equal("ALBUM_ID"))
 		{
 			albumID = atoi(argv[i]);
 		}
 	}
 	//std::queue<std::pair<Picture, std::pair<int,int>>>
-	((std::list<std::pair<Picture, int>>*)data)->push_back(std::make_pair(Picture(m_pictureId, m_name, m_pathOnDisk, m_creationDate), albumID));
-
+	((queue<pair<Picture, int>>*)data)->push(std::make_pair(Picture(m_pictureId, m_name, m_pathOnDisk, m_creationDate), albumID));
 	return 0;
 }
 
@@ -464,10 +463,12 @@ void DataBaseAccess::deleteAlbum(const std::string& albumName, int userId)
 
 	//delete album
 	std::string sqlStatement = "DELETE FROM Albums "
-		"WHERE USER_ID = " +std::to_string(userId) + " AND NAME = " + albumName + ";";
+		"WHERE USER_ID = " +std::to_string(userId) + " AND NAME = \"" + albumName + "\";";
 
-	executeCommand(sqlStatement.c_str());
-	//TODO: if executeCommand fails, throw "albumDeletionException"
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw MyException("Can't delete this album right now.");
+	}
 }
 
 /*
@@ -477,10 +478,10 @@ output: true or false if the album exists or not
 */
 bool DataBaseAccess::doesAlbumExists(const std::string& albumName, int userId)
 {
-	int rValue = false;
+	bool rValue = false;
 
 	std::string sqlStatement = "SELECT * FROM Albums "
-		"WHERE USER_ID = " + std::to_string(userId) + " AND NAME = " + albumName + ";";
+		"WHERE USER_ID = " + std::to_string(userId) + " AND NAME = \"" + albumName + "\";";
 
 	executeCommand(sqlStatement.c_str(), callbackCheckExistence, &rValue);
 
@@ -547,11 +548,13 @@ void DataBaseAccess::addPictureToAlbumByName(const std::string& albumName, const
 {
 	//insert picture to pictures and relate it to albums
 	std::string sqlStatement = "INSERT INTO Pictures (ID, NAME, LOCATION, CREATION_DATE, ALBUM_ID) "
-		"VALUES (" + std::to_string(picture.getId()) + ", " + picture.getName() + ", " + picture.getPath() + ", "
-		"" + picture.getCreationDate() + ", SELECT ID FROM Albums WHERE NAME = " + albumName + ");";
+		"VALUES (" + std::to_string(picture.getId()) + ", \"" + picture.getName() + "\", \"" + picture.getPath() + "\", "
+		"\"" + picture.getCreationDate() + "\", (SELECT ID FROM Albums WHERE NAME = \"" + albumName + "\"));";
 
-	executeCommand(sqlStatement.c_str());
-	//TODO: if executeCommand fails, throw "PictureAddingException"
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw MyException("Can't create this picture right now.");
+	}
 }
 
 
