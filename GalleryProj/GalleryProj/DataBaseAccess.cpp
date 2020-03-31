@@ -793,5 +793,57 @@ output: average tags of user
 */
 float DataBaseAccess::averageTagsPerAlbumOfUser(const User& user)
 {
+	//TODO: fill this function
 	return 0.0f;
 }
+
+/*
+The function will return the the user that has the maximum amount of tags
+(if there are more than 1, it return randomly- add a feature to return more than one)
+*/
+User DataBaseAccess::getTopTaggedUser()
+{
+	list<pair<string, string>> data;
+	int topTaggedUserId = 0;
+
+	std::string sqlStatement = "SELECT USER_ID FROM TAGS"
+		"GROUP BY USER_ID"
+		"ORDER BY COUNT(USER_ID) DESC"
+		"LIMIT 1;";
+
+	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
+	{
+		throw MyException("Failed to find top tagged user");
+	}
+
+	//expected value of data: list<pair<"USER_ID", value/top_taged_user_id>>, the list supposed to have 1 value 
+	topTaggedUserId = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
+	return getUser(topTaggedUserId);
+}
+
+/*
+The function will return the the user that has the maximum amount of tags
+(if there are more than 1, it return randomly- add a feature to return more than one)
+*/
+Picture DataBaseAccess::getTopTaggedPicture()
+{
+	list<pair<string, string>> data;
+	int topTaggedPictureId = 0;
+
+	std::string sqlStatement = "SELECT PICTURE_ID FROM TAGS"
+		"GROUP BY PICTURE_ID"
+		"ORDER BY COUNT(PICTURE_ID) DESC"
+		"LIMIT 1;";
+
+	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
+	{
+		throw MyException("Failed to find top tagged picture");
+	}
+
+	//expected value of data: list<pair<"PICTURE_ID", value/top_taged_picture_id>>, the list supposed to have 1 value 
+	topTaggedPictureId = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
+	
+	//TODO: cast picture details to picture object and return it
+	return ;
+}
+
