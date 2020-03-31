@@ -5,6 +5,9 @@
 #include <queue>
 #include <io.h>
 
+using std::list;
+using std::pair;
+using std::string;
 
 class DataBaseAccess : public IDataAccess
 {
@@ -23,6 +26,7 @@ private:
 	static int callbackDataToPictureList(void* data, int argc, char** argv, char** azColName);
 	static int callbackDataToTagList(void* data, int argc, char** argv, char** azColName);
 	static int callbackCheckExistence(void* data, int argc, char** argv, char** azColName);
+	static int callbackGetData(void* data, int argc, char** argv, char** azColName);
 
 public:
 	DataBaseAccess();
