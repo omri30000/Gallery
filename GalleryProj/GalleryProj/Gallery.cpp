@@ -4,6 +4,7 @@
 #include <chrono>
 #include <ctime>
 #include "MemoryAccess.h"
+#include "DataBaseAccess.h"
 #include "AlbumManager.h"
 
 
@@ -52,7 +53,7 @@ void printOpeningMsg()
 int main(void)
 {
 	// initialization data access
-	MemoryAccess dataAccess;
+	DataBaseAccess dataAccess;
 
 	// initialize album manager
 	AlbumManager albumManager(dataAccess);

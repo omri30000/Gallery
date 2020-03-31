@@ -124,6 +124,7 @@ int DataBaseAccess::callbackCheckExistence(void* data, int argc, char** argv, ch
 {
 	//if this function was called it means that there are 1 or more records
 	*(bool*)data = true;
+	return 0;
 }
 
 /*
@@ -172,7 +173,12 @@ bool DataBaseAccess::open()
 
 	if (fileExist != 0) // file doesn't exist, need to be initialized
 	{
-		createTables();
+		if (!createTables())
+		{
+			std::cout << "Failed to open DB" << std::endl;
+			return false;
+		}
+			
 	}
 
 	std::cout << "Opened Successfully" << std::endl;
@@ -296,7 +302,7 @@ bool DataBaseAccess::createTables()
 			"ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
 			"PICTURE_ID INTEGER, "
 			"USER_ID INTEGER, "
-			"FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID) ON DELETE CASCADE"
+			"FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID) ON DELETE CASCADE, "
 			"FOREIGN KEY(USER_ID) REFERENCES Users(ID) ON DELETE CASCADE"
 			");";
 
@@ -604,7 +610,7 @@ void DataBaseAccess::printUsers()
 	list<pair<string, string>> data;
 	string username = "";
 
-	std::string sqlStatement = "SELECT * FROM Users ;";
+	std::string sqlStatement = "SELECT * FROM Users;";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
 	{
@@ -618,11 +624,11 @@ void DataBaseAccess::printUsers()
 
 	for (list<pair<string, string>>::iterator it = data.begin(); it != data.end(); it++) 
 	{
-		if (it->first._Equal("ID"))
+		if (it->first._Equal("'ID'"))
 		{
 			std::cout << std::setw(5) << "   + @" << it->second << " - ";
 		}
-		else if (it->first._Equal("NAME"))
+		else if (it->first._Equal("'NAME'"))
 		{
 			std::cout << it->second << std::endl;
 		}
@@ -638,10 +644,12 @@ void DataBaseAccess::createUser(User& user)
 {
 	//insert user to Users
 	std::string sqlStatement = "INSERT INTO Users (ID, NAME) "
-		"VALUES (" + std::to_string(user.getId()) + ", " + user.getName() + ");";
+		"VALUES (" + std::to_string(user.getId()) + ", \"" + user.getName() + "\");";
 
-	executeCommand(sqlStatement.c_str());
-	//TODO: if executeCommand fails, throw "UserAddingException"
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw ItemNotFoundException(user.getName(), user.getId());
+	}
 }
 
 /*

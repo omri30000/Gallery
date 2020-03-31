@@ -9,7 +9,7 @@ class AlbumManager
 {
 public:
 	AlbumManager(IDataAccess& dataAccess);
-
+	~AlbumManager();
 	void executeCommand(CommandType command);
 	void printHelp() const;
 

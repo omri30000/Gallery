@@ -12,6 +12,14 @@ AlbumManager::AlbumManager(IDataAccess& dataAccess) :
 	m_dataAccess.open();
 }
 
+/*
+This function will distruct the object
+*/
+AlbumManager::~AlbumManager()
+{
+	this->m_dataAccess.close();
+}
+
 void AlbumManager::executeCommand(CommandType command) {
 	try {
 		AlbumManager::handler_func_t handler = m_commands.at(command);
