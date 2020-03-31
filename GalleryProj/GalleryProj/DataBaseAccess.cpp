@@ -60,21 +60,21 @@ int DataBaseAccess::callbackDataToPictureList(void* data, int argc, char** argv,
 		}
 		else if (std::string(azColName[i])._Equal("NAME"))
 		{
-			m_name = "\"";
-			m_name += argv[i];
-			m_name += "\"";
+			//m_name = "\"";
+			m_name = argv[i];
+			//m_name += "\"";
 		}
 		else if (std::string(azColName[i])._Equal("LOCATION"))
 		{
-			m_pathOnDisk = "\"";
-			m_pathOnDisk += argv[i];
-			m_pathOnDisk += "\"";
+			//m_pathOnDisk = "\"";
+			m_pathOnDisk = argv[i];
+			//m_pathOnDisk += "\"";
 		}
 		else if (std::string(azColName[i])._Equal("CREATION_DATE"))
 		{
-			m_creationDate = "\"";
-			m_creationDate += argv[i];
-			m_creationDate += "\"";
+			//m_creationDate = "\"";
+			m_creationDate = argv[i];
+			//m_creationDate += "\"";
 		}
 		else if (std::string(azColName[i])._Equal("ALBUM_ID"))
 		{
@@ -567,11 +567,11 @@ void DataBaseAccess::removePictureFromAlbumByName(const std::string& albumName, 
 {
 	//delete picture
 	std::string sqlStatement = "DELETE FROM Pictures "
-		"WHERE NAME = " + pictureName + " AND ALBUM_ID = SELECT ID FROM ALBUMS WHERE NAME = " + albumName + ";";
+		"WHERE NAME = \"" + pictureName + "\" AND ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = \"" + albumName + "\");";
 
 	if (!executeCommand(sqlStatement.c_str()))
 	{
-		throw ItemNotFoundException(pictureName, -1);
+		throw MyException("Can't remove this picture now.");
 	}
 }
 
