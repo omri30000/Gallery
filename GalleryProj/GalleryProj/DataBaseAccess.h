@@ -31,7 +31,7 @@ private:
 
 public:
 	DataBaseAccess();
-	virtual ~DataBaseAccess() = default;
+	virtual ~DataBaseAccess();
 
 	// album related
 	const std::list<Album> getAlbums() override;

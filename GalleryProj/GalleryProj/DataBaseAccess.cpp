@@ -153,6 +153,11 @@ DataBaseAccess::DataBaseAccess()
 	this->_db = nullptr;
 }
 
+DataBaseAccess::~DataBaseAccess()
+{
+	clear();
+}
+
 /*
 The function will open a database and set it up with tables if it's a new one
 input: none
@@ -584,10 +589,12 @@ void DataBaseAccess::tagUserInPicture(const std::string& albumName, const std::s
 {
 	//insert tag to tags and relate it to Pictures and Users
 	std::string sqlStatement = "INSERT INTO Tags (PICTURE_ID, USER_ID) "
-		"VALUES (SELECT ID FROM Pictures WHERE NAME = "+ pictureName +", "+ std::to_string(userId) +");";
+		"VALUES ((SELECT ID FROM Pictures WHERE NAME = \""+ pictureName +"\"), "+ std::to_string(userId) +");";
 	//TODO: fix statement so it will work when there are more than 1 pictures with the same name
-	executeCommand(sqlStatement.c_str());
-	//TODO: if executeCommand fails, throw "PictureAddingException"
+	if (!executeCommand(sqlStatement.c_str()))
+	{
+		throw MyException("Can't tag a user in this picture now.");
+	}
 }
 
 /*
@@ -599,11 +606,11 @@ void DataBaseAccess::untagUserInPicture(const std::string& albumName, const std:
 {
 	//delete picture
 	std::string sqlStatement = "DELETE FROM Tags "
-		"WHERE PICTURE_ID = SELECT ID FROM Pictures WHERE NAME = " + pictureName + " AND USER_ID = " + std::to_string(userId) + ";";
+		"WHERE PICTURE_ID = (SELECT ID FROM Pictures WHERE NAME = \"" + pictureName + "\") AND USER_ID = " + std::to_string(userId) + ";";
 
 	if (!executeCommand(sqlStatement.c_str()))
 	{
-		throw ItemNotFoundException(pictureName, -1);
+		throw MyException("Can't remove this tag right now.");
 	}
 }
 
@@ -726,7 +733,7 @@ int DataBaseAccess::countAlbumsOwnedOfUser(const User& user)
 	list<pair<string, string>> data;
 	int amountOfAlbums = 0;
 
-	std::string sqlStatement = "SELECT COUNT(NAME) AS amountOfRecords FROM Albums"
+	std::string sqlStatement = "SELECT COUNT(NAME) AS amountOfRecords FROM Albums "
 		"WHERE USER_ID = " +std::to_string(user.getId()) + ";";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
@@ -735,7 +742,7 @@ int DataBaseAccess::countAlbumsOwnedOfUser(const User& user)
 	}
 
 	//expected value of data: list<pair<col_name, value>>, the list supposed to have 1 value 
-	amountOfAlbums = atoi(data.begin()->second.c_str()); // get the amount of albums of the user
+	amountOfAlbums = atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str()); // get the amount of albums of the user
 	return amountOfAlbums;
 }
 
@@ -753,7 +760,7 @@ int DataBaseAccess::countAlbumsTaggedOfUser(const User& user)
 	string pictureIdsString = "(";
 	int amountOfAlbums = 0;
 
-	std::string sqlStatement = "SELECT DISTINCT Tags.PICTURE_ID FROM Tags"
+	std::string sqlStatement = "SELECT DISTINCT Tags.PICTURE_ID FROM Tags "
 		"WHERE USER_ID = " + std::to_string(user.getId()) + ";";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
@@ -763,24 +770,31 @@ int DataBaseAccess::countAlbumsTaggedOfUser(const User& user)
 	
 	//expected value of data variable currently: list<pair<"picture_id", value>>, the list supposed to have 1 value 
 	list<pair<string, string>>::iterator it = data.begin();
-	pictureIdsString += it->second;
-	it++;
-	for (it; it != data.end(); it++)
-	{
-		pictureIdsString += ( ", " + it->second);
-		//should look like this at the end (1, 2, 3, 4) - picture ids in brackets
-	}
-	pictureIdsString += ")";
+	if (it != data.end()) {
+		pictureIdsString += it->second;
+		it++;
+		for (it; it != data.end(); it++)
+		{
+			pictureIdsString += ( ", " + it->second);
+			//should look like this at the end (1, 2, 3, 4) - picture ids in brackets
+		}
+		pictureIdsString += ")";
 
-	sqlStatement = "SELECT COUNT(DISTINCT PICTURES.ALBUM_ID) as amountOfAlbums FROM PICTURES"
-		"WHERE PICTURES.ID in " + pictureIdsString + ";";
-
-	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
-	{
-		throw ItemNotFoundException(user.getName(), user.getId());
+		sqlStatement = "SELECT COUNT(DISTINCT PICTURES.ALBUM_ID) as amountOfAlbums FROM PICTURES "
+			"WHERE PICTURES.ID in " + pictureIdsString + ";";
+		data.clear();
+		if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
+		{
+			throw ItemNotFoundException(user.getName(), user.getId());
+		}
+		//expected value of data variable currently: list<pair<"amountOfAlbums", value>>, the list supposed to have 1 value 
+		amountOfAlbums = atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str()); // get the amount of tags of the user
 	}
-	//expected value of data variable currently: list<pair<"amountOfAlbums", value>>, the list supposed to have 1 value 
-	amountOfAlbums = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
+	else
+	{
+		amountOfAlbums = 0;
+	}
+
 	return amountOfAlbums;
 }
 
@@ -794,7 +808,7 @@ int DataBaseAccess::countTagsOfUser(const User& user)
 	list<pair<string, string>> data;
 	int amountOfTags = 0;
 
-	std::string sqlStatement = "SELECT COUNT(USER_ID) AS amountOfRecords FROM Tags"
+	std::string sqlStatement = "SELECT COUNT(USER_ID) AS amountOfRecords FROM Tags "
 		"WHERE USER_ID = " + std::to_string(user.getId()) + ";";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
@@ -803,7 +817,7 @@ int DataBaseAccess::countTagsOfUser(const User& user)
 	}
 
 	//expected value of data: list<pair<col_name, value>>, the list supposed to have 1 value 
-	amountOfTags = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
+	amountOfTags = atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str()); // get the amount of tags of the user
 	return amountOfTags;
 }
 
