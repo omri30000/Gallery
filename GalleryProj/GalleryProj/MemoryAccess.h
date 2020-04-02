@@ -50,7 +50,8 @@ public:
 	void clear() override;
 
 	//temp functions
-	int getMaxId() override;
+	int getMaxUserId() override;
+	int getMaxPictureId() override;
 
 private:
 	std::list<Album> m_albums;

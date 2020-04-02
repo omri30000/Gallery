@@ -47,5 +47,6 @@ public:
 	virtual void clear() = 0;
 
 	//temp functions
-	virtual int getMaxId() = 0;
+	virtual int getMaxUserId() = 0;
+	virtual int getMaxPictureId() = 0;
 };

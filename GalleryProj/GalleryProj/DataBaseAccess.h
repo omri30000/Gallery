@@ -72,5 +72,6 @@ public:
 	void clear() override; // TODO: clear class data
 
 	//temp functions
-	int getMaxId() override;
+	int getMaxUserId() override;
+	int getMaxPictureId() override;
 };

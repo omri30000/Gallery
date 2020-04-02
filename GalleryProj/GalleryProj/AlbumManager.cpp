@@ -5,11 +5,12 @@
 #include "AlbumNotOpenException.h"
 
 
-AlbumManager::AlbumManager(IDataAccess& dataAccess) : m_dataAccess(dataAccess), m_nextPictureId(100) 
+AlbumManager::AlbumManager(IDataAccess& dataAccess) : m_dataAccess(dataAccess) 
 {
 	// Left empty
 	m_dataAccess.open();
-	m_nextUserId = dataAccess.getMaxId();
+	m_nextPictureId = dataAccess.getMaxPictureId();
+	m_nextUserId = dataAccess.getMaxUserId();
 }
 
 /*
