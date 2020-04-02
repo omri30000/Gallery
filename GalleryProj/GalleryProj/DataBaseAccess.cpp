@@ -924,7 +924,7 @@ std::list<Picture> DataBaseAccess::getTaggedPicturesOfUser(const User& user)
 	string sqlStatement = "SELECT * FROM Pictures "
 		"INNER JOIN Tags "
 		"ON Pictures.ID = Tags.PICTURE_ID "
-		"WHERE Tags.USER_ID = 1;";
+		"WHERE Tags.USER_ID = " + std::to_string(user.getId()) + ";";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
 	{
@@ -934,18 +934,19 @@ std::list<Picture> DataBaseAccess::getTaggedPicturesOfUser(const User& user)
 	//expected value of data: list<pair<column_name, value/top_taged_picture>>
 	for (list<pair<string, string>>::iterator it = data.begin(); it != data.end(); it++)
 	{
-		if (it->first._Equal("ID"))
+		if (it->first.find("PICTURE_ID") != -1)
 			pictureIds.push(atoi(it->second.c_str())); // get the ID of the top tagged picture
-		else if (it->first._Equal("NAME"))
+		else if (it->first.find("NAME") != -1)
 			pictureNames.push(it->second);
-		else if (it->first._Equal("CREATION_DATE"))
+		else if (it->first.find("CREATION_DATE") != -1)
 			pictureCreationDates.push(it->second);
-		else if (it->first._Equal("LOCATION"))
+		else if (it->first.find("LOCATION") != -1)
 			pictureLocations.push(it->second);
 	}
 
 	while (!pictureIds.empty())
 	{
+		//TODO: realte IDs to picture before adding it to queue
 		pictures.push_back(Picture(pictureIds.front(), pictureNames.front(), pictureCreationDates.front(), pictureLocations.front()));
 
 		//remove one line
