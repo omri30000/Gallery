@@ -718,6 +718,11 @@ User DataBaseAccess::getUser(int userId)
 		//throw ItemNotFoundException(userId);
 	}
 	
+	if (data.size() == 0)
+	{
+		throw MyException("can't get user- invalid user");
+	}
+
 	//expected value of data: list<pair<col_name, value>>, the list supposed to have 1 value 
 	username = data.begin()->second; // get the name of the user
 	return User(userId, username);
@@ -828,11 +833,13 @@ output: average tags of user
 */
 float DataBaseAccess::averageTagsPerAlbumOfUser(const User& user)
 {
-	float avg = 0;
+	int albumsTaggedCount = countAlbumsTaggedOfUser(user);
 
+	if (0 == albumsTaggedCount) {
+		return 0;
+	}
 
-	//TODO: fill this function
-	return 0.0f;
+	return static_cast<float>(countTagsOfUser(user)) / albumsTaggedCount;
 }
 
 /*
@@ -844,9 +851,9 @@ User DataBaseAccess::getTopTaggedUser()
 	list<pair<string, string>> data;
 	int topTaggedUserId = 0;
 
-	std::string sqlStatement = "SELECT USER_ID FROM TAGS"
-		"GROUP BY USER_ID"
-		"ORDER BY COUNT(USER_ID) DESC"
+	std::string sqlStatement = "SELECT USER_ID FROM TAGS "
+		"GROUP BY USER_ID "
+		"ORDER BY COUNT(USER_ID) DESC "
 		"LIMIT 1;";
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
@@ -855,7 +862,7 @@ User DataBaseAccess::getTopTaggedUser()
 	}
 
 	//expected value of data: list<pair<"USER_ID", value/top_taged_user_id>>, the list supposed to have 1 value 
-	topTaggedUserId = atoi(data.begin()->second.c_str()); // get the amount of tags of the user
+	topTaggedUserId = atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str()); // get the amount of tags of the user
 	return getUser(topTaggedUserId);
 }
 
@@ -885,14 +892,14 @@ Picture DataBaseAccess::getTopTaggedPicture()
 	//expected value of data: list<pair<column_name, value/top_taged_picture>>, the list supposed to have 1 record in it 
 	for (list<pair<string, string>>::iterator it = data.begin(); it != data.end(); it++)
 	{
-		if (it->first._Equal("ID"))
-			topTaggedPictureId = atoi(it->second.c_str()); // get the ID of the top tagged picture
-		else if (it->first._Equal("NAME"))
-			topTaggedPictureName = it->second;
-		else if (it->first._Equal("CREATION_DATE"))
-			topTaggedPictureCreationDate = it->second;
-		else if (it->first._Equal("LOCATION"))
-			topTaggedPictureLocation = it->second;
+		if (it->first.find("PICTURE_ID") != -1)
+			topTaggedPictureId = atoi(it->second.substr(1, it->second.length() - 2).c_str()); // get the ID of the top tagged picture
+		else if (it->first.find("NAME") != -1)
+			topTaggedPictureName = it->second.substr(1, it->second.length() - 2);
+		else if (it->first.find("CREATION_DATE") != -1)
+			topTaggedPictureCreationDate = it->second.substr(1, it->second.length() - 2);
+		else if (it->first.find("LOCATION") != -1)
+			topTaggedPictureLocation = it->second.substr(1, it->second.length() - 2);
 	}
 
 	//TODO: relate tags to picture object before returning it
