@@ -70,4 +70,7 @@ public:
 	bool open() override;
 	void close() override;
 	void clear() override; // TODO: clear class data
+
+	//temp functions
+	int getMaxId() override;
 };

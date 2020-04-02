@@ -45,4 +45,7 @@ public:
 	virtual bool open() = 0;
 	virtual void close() = 0;
 	virtual void clear() = 0;
+
+	//temp functions
+	virtual int getMaxId() = 0;
 };

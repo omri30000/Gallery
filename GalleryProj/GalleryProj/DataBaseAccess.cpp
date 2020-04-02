@@ -212,6 +212,29 @@ void DataBaseAccess::clear()
 }
 
 /*
+the function will find the Minimal ID available for new user
+input: none
+output: the Minimal ID available for new user (int)
+*/
+int DataBaseAccess::getMaxId()
+{
+	list<pair<string, string>> data;
+
+	std::string sqlStatement = "SELECT ID FROM Users "
+		"ORDER BY ID DESC "
+		"LIMIT 1;";
+
+	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
+	{
+		return 200;
+	}
+
+
+	//here the list "data" should have 1 value in it: list<pair<"ID", "'VALUE_MAX_ID'">>
+	return atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str());
+}
+
+/*
 The function will get sql statement and execute it on the db of the class
 input: sql statement
 output: true or false if everything went fine
@@ -628,7 +651,7 @@ void DataBaseAccess::printUsers()
 
 	if (!executeCommand(sqlStatement.c_str(), callbackGetData, &data))
 	{
-		//throw ItemNotFoundException(userId);
+		throw MyException("can't print users right now.");
 	}
 
 	//expected value of data: list<pair<col_name, value>>

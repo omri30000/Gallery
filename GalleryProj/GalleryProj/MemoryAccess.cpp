@@ -45,6 +45,16 @@ void MemoryAccess::clear()
 	m_albums.clear();
 }
 
+/*
+the function will find the Minimal ID available for new user
+input: none 
+output: the Minimal ID available for new user (int)
+*/
+int MemoryAccess::getMaxId()
+{
+	return 200;
+}
+
 auto MemoryAccess::getAlbumIfExists(const std::string & albumName)
 {
 	auto result = std::find_if(std::begin(m_albums), std::end(m_albums), [&](auto& album) { return album.getName() == albumName; });
