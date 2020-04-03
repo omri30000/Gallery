@@ -245,7 +245,7 @@ void AlbumManager::showPicture()
 
 	// Start the child process. 
 	if (!CreateProcess(NULL,   // No module name (use command line)
-		const_cast<LPSTR>(appToOpen.c_str()),        // Command line
+		const_cast<LPSTR>(appToOpen.c_str()), // Command line
 		NULL,           // Process handle not inheritable
 		NULL,           // Thread handle not inheritable
 		FALSE,          // Set handle inheritance to FALSE
@@ -289,13 +289,29 @@ std::string AlbumManager::choosePhotoEditor()
 	std::string appToOpen = "";
 
 	std::cout << "Choose one of the following application: " << std::endl;
-	std::cout << "** mspaint.exe" << std::endl;
-	std::cout << "** ms-photos:" << std::endl;
+	std::cout << "1. mspaint.exe" << std::endl;
+	std::cout << "2. ms-photos:" << std::endl;
 	std::cout << std::endl << "Enter: ";
 	std::cin >> appToOpen;
 
-	if (appToOpen._Equal("Photos"))
-		appToOpen = "";
+	try
+	{
+		switch (atoi(appToOpen.c_str()))
+		{
+		case 1:
+			appToOpen = "mspaint.exe";
+			break;
+		default:
+			appToOpen = "mspaint.exe";
+			break;
+		}
+	}
+	catch (std::exception e)
+	{
+		std::cout << "Invalid input! using default photo editor." << std::endl;
+		appToOpen = "mspaint.exe";
+	}
+
 	return appToOpen;
 }
 
