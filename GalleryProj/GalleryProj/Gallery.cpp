@@ -7,6 +7,17 @@
 #include "DataBaseAccess.h"
 #include "AlbumManager.h"
 
+/*
+The function will be called when Ctrl+C is pressed
+*/
+BOOL WINAPI consoleHandler(DWORD signal, std::string procName)
+{
+	if (signal == CTRL_C_EVENT)
+	{
+		exit(1);
+	}
+	return true;
+}
 
 int getCommandNumberFromUser()
 {
@@ -59,17 +70,16 @@ int main(void)
 	AlbumManager albumManager(dataAccess);
 
 	printOpeningMsg();
-	
+
 	do {
 		int commandNumber = getCommandNumberFromUser();
-		
-		try	{
+		try	{	
 			albumManager.executeCommand(static_cast<CommandType>(commandNumber));
 		} catch (std::exception& e) {	
 			std::cout << e.what() << std::endl;
 		}
 	} 
 	while (true);
+
+	return 0;
 }
-
-

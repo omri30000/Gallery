@@ -231,6 +231,8 @@ int DataBaseAccess::getMaxUserId()
 
 
 	//here the list "data" should have 1 value in it: list<pair<"ID", "'VALUE_MAX_ID'">>
+	if (data.empty())
+		return 200;
 	return atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str());
 }
 
@@ -252,8 +254,10 @@ int DataBaseAccess::getMaxPictureId()
 		return 100;
 	}
 
-
+	
 	//here the list "data" should have 1 value in it: list<pair<"ID", "'VALUE_MAX_ID'">>
+	if (data.empty())
+		return 100;
 	return atoi(data.begin()->second.substr(1, data.begin()->second.length() - 2).c_str());
 }
 

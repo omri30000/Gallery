@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vector>
 #include <Windows.h>
+#include <signal.h>
 #include "Constants.h"
 #include "MemoryAccess.h"
 #include "Album.h"
@@ -22,6 +23,8 @@ private:
     std::string m_currentAlbumName{};
 	IDataAccess& m_dataAccess;
 	Album m_openAlbum;
+	CommandType curCommand;
+	static HANDLE curRunningEditor;
 
 	void help();
 	// albums management
@@ -60,10 +63,10 @@ private:
 	bool fileExistsOnDisk(const std::string& filename);
 	void refreshOpenAlbum();
     bool isCurrentAlbumSet() const;
-	void detectCtrlC() const;
+	static BOOL WINAPI terminatingConsoleHandler(DWORD signal);
+	static BOOL WINAPI consoleHandler(DWORD signal);
 
 	static const std::vector<struct CommandGroup> m_prompts;
 	static const std::map<CommandType, handler_func_t> m_commands;
-
 };
 

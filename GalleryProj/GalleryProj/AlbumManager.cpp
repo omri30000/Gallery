@@ -4,10 +4,15 @@
 #include "MyException.h"
 #include "AlbumNotOpenException.h"
 
+HANDLE AlbumManager::curRunningEditor;
 
 AlbumManager::AlbumManager(IDataAccess& dataAccess) : m_dataAccess(dataAccess) 
 {
-	// Left empty
+	if (!SetConsoleCtrlHandler(AlbumManager::consoleHandler, TRUE))
+	{
+		throw MyException("can't set control handler");
+	}
+	this->curCommand = HELP;
 	m_dataAccess.open();
 	m_nextPictureId = dataAccess.getMaxPictureId();
 	m_nextUserId = dataAccess.getMaxUserId();
@@ -23,6 +28,7 @@ AlbumManager::~AlbumManager()
 
 void AlbumManager::executeCommand(CommandType command) {
 	try {
+		this->curCommand = command;
 		AlbumManager::handler_func_t handler = m_commands.at(command);
 		(this->*handler)();
 	} catch (const std::out_of_range&) {
@@ -216,8 +222,8 @@ void AlbumManager::showPicture()
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
-	std::string appToOpen = "mspaint.exe";
-
+	std::string appToOpen = "";
+	signal(SIGINT, SIG_IGN);
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
@@ -234,11 +240,9 @@ void AlbumManager::showPicture()
 		throw MyException("Error: Can't open <" + picName + "> since it doesnt exist on disk.\n");
 	}
 
-	//appToOpen = choosePhotoEditor();
+	appToOpen = choosePhotoEditor();
 	appToOpen += (" " + pic.getPath());
 
-	//const_cast<LPSTR>(pic.getPath().c_str());
-	
 	// Start the child process. 
 	if (!CreateProcess(NULL,   // No module name (use command line)
 		const_cast<LPSTR>(appToOpen.c_str()),        // Command line
@@ -249,14 +253,26 @@ void AlbumManager::showPicture()
 		NULL,           // Use parent's environment block
 		NULL,           // Use parent's starting directory 
 		&si,            // Pointer to STARTUPINFO structure
-		&pi)           // Pointer to PROCESS_INFORMATION structure
+		&pi)            // Pointer to PROCESS_INFORMATION structure
 		)
 	{
 		throw MyException("can't open photo editor. Error: " + std::to_string(GetLastError()) + ".\n");
 	}
 
 	// Wait until child process exits.
+	this->curRunningEditor = pi.hProcess;
+	if (!SetConsoleCtrlHandler(AlbumManager::terminatingConsoleHandler, TRUE))
+	{
+		throw MyException("can't set control handler");
+	}
+
 	WaitForSingleObject(pi.hProcess, INFINITE);
+
+	this->curRunningEditor = NULL;
+	if (!SetConsoleCtrlHandler(AlbumManager::consoleHandler, TRUE))
+	{
+		throw MyException("can't set control handler");
+	}
 
 	// Close process and thread handles. 
 	CloseHandle(pi.hProcess);
@@ -274,10 +290,12 @@ std::string AlbumManager::choosePhotoEditor()
 
 	std::cout << "Choose one of the following application: " << std::endl;
 	std::cout << "** mspaint.exe" << std::endl;
-	std::cout << "** another program that will be added later" << std::endl;
+	std::cout << "** ms-photos:" << std::endl;
 	std::cout << std::endl << "Enter: ";
 	std::cin >> appToOpen;
 
+	if (appToOpen._Equal("Photos"))
+		appToOpen = "";
 	return appToOpen;
 }
 
@@ -493,32 +511,25 @@ bool AlbumManager::isCurrentAlbumSet() const
     return !m_currentAlbumName.empty();
 }
 
-/*
-The function will detect key strokes until Ctrl+C is pressed
-input: none
-output: none
-*/
-void AlbumManager::detectCtrlC() const
+BOOL WINAPI AlbumManager::terminatingConsoleHandler(DWORD signal)
 {
-	//std::cout << "\nstart key strokes\n";
-	const int MIN_KEY_VALUE = 8;
-	const int MAX_KEY_VALUE = 255;
-	const int SUCCESS = -32767; // Bin value: 0111-1111-1111-1111
-	//success specifies that the key was clicked in the right terms
-
-	while (true)
+	if (signal == CTRL_C_EVENT)
 	{
-		for (int i = 8; i <= 255; i++)
-		{
-			if (GetAsyncKeyState(i) == SUCCESS) {
-				if (i == CTRL_C_EVENT){
-					//join
-					return;
-				}
-
-			}
-		}
+		TerminateProcess(AlbumManager::curRunningEditor, 1);
 	}
+	return true;
+}
+
+/*
+The function will be called when Ctrl+C is pressed
+*/
+BOOL WINAPI AlbumManager::consoleHandler(DWORD signal)
+{
+	if (signal == CTRL_C_EVENT)
+	{
+		std::exit(1);
+	}
+	return true;
 }
 
 const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
