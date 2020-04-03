@@ -214,6 +214,14 @@ void AlbumManager::listPicturesInAlbum()
 
 void AlbumManager::showPicture()
 {
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	std::string appToOpen = "mspaint.exe";
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
 	refreshOpenAlbum();
 
 	std::string picName = getInputFromConsole("Enter picture name: ");
@@ -223,13 +231,54 @@ void AlbumManager::showPicture()
 	
 	auto pic = m_openAlbum.getPicture(picName);
 	if ( !fileExistsOnDisk(pic.getPath()) ) {
-		throw MyException("Error: Can't open <" + picName+ "> since it doesnt exist on disk.\n");
+		throw MyException("Error: Can't open <" + picName + "> since it doesnt exist on disk.\n");
 	}
 
-	// Bad practice!!!
-	// Can lead to privileges escalations
-	// You will replace it on WinApi Lab(bonus)
-	system(pic.getPath().c_str()); 
+	//appToOpen = choosePhotoEditor();
+	appToOpen += (" " + pic.getPath());
+
+	//const_cast<LPSTR>(pic.getPath().c_str());
+	
+	// Start the child process. 
+	if (!CreateProcess(NULL,   // No module name (use command line)
+		const_cast<LPSTR>(appToOpen.c_str()),        // Command line
+		NULL,           // Process handle not inheritable
+		NULL,           // Thread handle not inheritable
+		FALSE,          // Set handle inheritance to FALSE
+		0,              // No creation flags
+		NULL,           // Use parent's environment block
+		NULL,           // Use parent's starting directory 
+		&si,            // Pointer to STARTUPINFO structure
+		&pi)           // Pointer to PROCESS_INFORMATION structure
+		)
+	{
+		throw MyException("can't open photo editor. Error: " + std::to_string(GetLastError()) + ".\n");
+	}
+
+	// Wait until child process exits.
+	WaitForSingleObject(pi.hProcess, INFINITE);
+
+	// Close process and thread handles. 
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+}
+
+/*
+The function will print a menu of photo editors that the user can use to show his picture on
+input: none
+output: the chosen photo editor's name
+*/
+std::string AlbumManager::choosePhotoEditor()
+{
+	std::string appToOpen = "";
+
+	std::cout << "Choose one of the following application: " << std::endl;
+	std::cout << "** mspaint.exe" << std::endl;
+	std::cout << "** another program that will be added later" << std::endl;
+	std::cout << std::endl << "Enter: ";
+	std::cin >> appToOpen;
+
+	return appToOpen;
 }
 
 void AlbumManager::tagUserInPicture()
@@ -442,6 +491,34 @@ output: if an album is currently open
 bool AlbumManager::isCurrentAlbumSet() const
 {
     return !m_currentAlbumName.empty();
+}
+
+/*
+The function will detect key strokes until Ctrl+C is pressed
+input: none
+output: none
+*/
+void AlbumManager::detectCtrlC() const
+{
+	//std::cout << "\nstart key strokes\n";
+	const int MIN_KEY_VALUE = 8;
+	const int MAX_KEY_VALUE = 255;
+	const int SUCCESS = -32767; // Bin value: 0111-1111-1111-1111
+	//success specifies that the key was clicked in the right terms
+
+	while (true)
+	{
+		for (int i = 8; i <= 255; i++)
+		{
+			if (GetAsyncKeyState(i) == SUCCESS) {
+				if (i == CTRL_C_EVENT){
+					//join
+					return;
+				}
+
+			}
+		}
+	}
 }
 
 const std::vector<struct CommandGroup> AlbumManager::m_prompts  = {
