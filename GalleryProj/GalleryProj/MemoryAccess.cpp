@@ -18,6 +18,11 @@ void MemoryAccess::printAlbums()
 	}
 }
 
+/*
+this function will create dummy users for nothing.
+input: none
+output: always true this is useless
+*/
 bool MemoryAccess::open()
 {
 	// create some dummy albums
@@ -38,6 +43,26 @@ void MemoryAccess::clear()
 {
 	m_users.clear();
 	m_albums.clear();
+}
+
+/*
+the function will find the Minimal ID available for new user
+input: none 
+output: the Minimal ID available for new user (int)
+*/
+int MemoryAccess::getMaxUserId()
+{
+	return 200;
+}
+
+/*
+the function will find the Minimal ID available for new picture
+input: none
+output: the Minimal ID available for new user (int)
+*/
+int MemoryAccess::getMaxPictureId()
+{
+	return 100;
 }
 
 auto MemoryAccess::getAlbumIfExists(const std::string & albumName)

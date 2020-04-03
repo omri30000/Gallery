@@ -5,11 +5,20 @@
 #include "AlbumNotOpenException.h"
 
 
-AlbumManager::AlbumManager(IDataAccess& dataAccess) :
-    m_dataAccess(dataAccess), m_nextPictureId(100), m_nextUserId(200)
+AlbumManager::AlbumManager(IDataAccess& dataAccess) : m_dataAccess(dataAccess) 
 {
 	// Left empty
 	m_dataAccess.open();
+	m_nextPictureId = dataAccess.getMaxPictureId();
+	m_nextUserId = dataAccess.getMaxUserId();
+}
+
+/*
+This function will distruct the object
+*/
+AlbumManager::~AlbumManager()
+{
+	this->m_dataAccess.close();
 }
 
 void AlbumManager::executeCommand(CommandType command) {
@@ -218,7 +227,7 @@ void AlbumManager::showPicture()
 	}
 
 	// Bad practice!!!
-	// Can lead to privileges escalation
+	// Can lead to privileges escalations
 	// You will replace it on WinApi Lab(bonus)
 	system(pic.getPath().c_str()); 
 }
@@ -349,7 +358,7 @@ void AlbumManager::userStatistics()
 	std::cout << "user @" << userId << " Statistics:" << std::endl << "--------------------" << std::endl <<
 		"  + Count of Albums Tagged: " << m_dataAccess.countAlbumsTaggedOfUser(user) << std::endl <<
 		"  + Count of Tags: " << m_dataAccess.countTagsOfUser(user) << std::endl <<
-		"  + Avarage Tags per Alboum: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl <<
+		"  + Avarage Tags per Album: " << m_dataAccess.averageTagsPerAlbumOfUser(user) << std::endl <<
 		"  + Count of albums owned by user: " << m_dataAccess.countAlbumsOwnedOfUser(user);
 }
 
@@ -425,6 +434,11 @@ void AlbumManager::refreshOpenAlbum() {
     m_openAlbum = m_dataAccess.openAlbum(m_currentAlbumName);
 }
 
+/*
+The function checks if there's an album which currently open
+input: none
+output: if an album is currently open
+*/
 bool AlbumManager::isCurrentAlbumSet() const
 {
     return !m_currentAlbumName.empty();

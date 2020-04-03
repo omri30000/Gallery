@@ -25,12 +25,11 @@ public:
 	virtual void untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId) = 0;
 
 	// user related
-	virtual void printUsers() =0;
+	virtual void printUsers() = 0;
 	virtual User getUser(int userId) = 0;
 	virtual void createUser(User& user ) = 0;
 	virtual void deleteUser(const User& user) = 0;
 	virtual bool doesUserExists(int userId) = 0 ;
-	
 	
 	// user statistics
 	virtual int countAlbumsOwnedOfUser(const User& user) = 0;
@@ -46,4 +45,8 @@ public:
 	virtual bool open() = 0;
 	virtual void close() = 0;
 	virtual void clear() = 0;
+
+	//temp functions
+	virtual int getMaxUserId() = 0;
+	virtual int getMaxPictureId() = 0;
 };

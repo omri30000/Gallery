@@ -49,6 +49,10 @@ public:
 	void close() override {};
 	void clear() override;
 
+	//temp functions
+	int getMaxUserId() override;
+	int getMaxPictureId() override;
+
 private:
 	std::list<Album> m_albums;
 	std::list<User> m_users;
