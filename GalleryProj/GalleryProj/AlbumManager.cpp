@@ -289,7 +289,7 @@ std::string AlbumManager::choosePhotoEditor()
 {
 	std::string appToOpen = "";
 
-	std::cout << "Choose one of the following application: " << std::endl;
+	std::cout << "Choose one of the following applications: " << std::endl;
 	std::cout << "1. mspaint.exe" << std::endl;
 	std::cout << "2. irfanView.exe:" << std::endl;
 	std::cout << std::endl << "Enter number: ";
