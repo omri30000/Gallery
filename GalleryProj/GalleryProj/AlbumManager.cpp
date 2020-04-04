@@ -242,6 +242,7 @@ void AlbumManager::showPicture()
 
 	appToOpen = choosePhotoEditor();
 	appToOpen += (" " + pic.getPath());
+	//appToOpen = pic.getPath();
 
 	// Start the child process. 
 	if (!CreateProcess(NULL,   // No module name (use command line)
@@ -290,8 +291,8 @@ std::string AlbumManager::choosePhotoEditor()
 
 	std::cout << "Choose one of the following application: " << std::endl;
 	std::cout << "1. mspaint.exe" << std::endl;
-	std::cout << "2. ms-photos:" << std::endl;
-	std::cout << std::endl << "Enter: ";
+	std::cout << "2. irfanView.exe:" << std::endl;
+	std::cout << std::endl << "Enter number: ";
 	std::cin >> appToOpen;
 
 	try
@@ -301,7 +302,11 @@ std::string AlbumManager::choosePhotoEditor()
 		case 1:
 			appToOpen = "mspaint.exe";
 			break;
+		case 2:
+			appToOpen = "\"C:\\Program Files\\IrfanView\\i_view64.exe\"";
+			break;
 		default:
+			std::cout << "Invalid input! using default photo editor." << std::endl;
 			appToOpen = "mspaint.exe";
 			break;
 		}
